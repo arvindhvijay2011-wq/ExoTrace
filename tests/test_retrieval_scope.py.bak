@@ -1,0 +1,55 @@
+"""Tests for ExoTrace query scope selection and document-type filters."""
+
+import pytest
+
+from exotrace.vector.retrieve import allowed_doc_types, infer_search_scope
+
+
+@pytest.mark.parametrize("scope", ["all", "references", "profiles"])
+def test_allowed_doc_types_accepts_supported_scope(scope: str) -> None:
+    result = allowed_doc_types(scope)
+    if scope == "all":
+        assert result is None
+    elif scope == "references":
+        assert result == {"official_nasa_reference_chunk"}
+    else:
+        assert result == {"planet_profile"}
+
+
+def test_allowed_doc_types_rejects_unknown_scope() -> None:
+    with pytest.raises(ValueError, match="Unsupported retrieval scope"):
+        allowed_doc_types("unknown")
+
+
+def test_infer_scope_routes_definition_question_to_reference_docs() -> None:
+    documents = [
+        {"doc_type": "planet_profile", "metadata": {"planet_name": "Kepler-436 b"}},
+        {"doc_type": "official_nasa_reference_chunk", "metadata": {"source_slug": "archive_parameter_columns"}},
+    ]
+    assert infer_search_scope(
+        "What does planetary orbital eccentricity describe?", documents
+    ) == "references"
+
+
+def test_infer_scope_routes_exact_planet_mention_to_profiles() -> None:
+    documents = [
+        {"doc_type": "planet_profile", "metadata": {"planet_name": "Kepler-436 b", "hostname": "Kepler-436"}},
+        {"doc_type": "official_nasa_reference_chunk", "metadata": {"source_slug": "archive_parameter_columns"}},
+    ]
+    assert infer_search_scope("What is the orbital period of Kepler-436 b?", documents) == "profiles"
+
+
+def test_infer_scope_defaults_unrecognized_query_to_all() -> None:
+    documents = [
+        {"doc_type": "planet_profile", "metadata": {"planet_name": "Kepler-436 b"}},
+        {"doc_type": "official_nasa_reference_chunk", "metadata": {}},
+    ]
+    assert infer_search_scope("Find likely patterns in this collection", documents) == "all"
+
+
+def test_named_planet_scope_takes_precedence_over_definition_cue() -> None:
+    documents = [
+        {"doc_type": "planet_profile", "metadata": {"planet_name": "Kepler-436 b"}},
+        {"doc_type": "official_nasa_reference_chunk", "metadata": {}},
+    ]
+    assert infer_search_scope("What does Kepler-436 b orbital eccentricity mean?", documents) == "profiles"

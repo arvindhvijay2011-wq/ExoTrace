@@ -1,0 +1,1 @@
+Contract-preserving ExoTrace conversational patch. Uses uploaded older backend files as the baseline; only makes `fields` optional for broad catalogue requests and adds planner guidance. Original filter normalization and planner safeguards are preserved. Existing tests are not replaced. See `docs/CONTRACT_PRESERVING_PATCH.md`.

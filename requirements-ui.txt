@@ -1,0 +1,2 @@
+# Optional presentation-layer dependency. Core ExoTrace backend dependencies are in pyproject.toml.
+streamlit>=1.40,<2.0

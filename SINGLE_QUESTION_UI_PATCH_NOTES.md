@@ -1,0 +1,1 @@
+ExoTrace single-question UI patch: removes follow-up UI/context routing, keeps existing backend contracts, and collapses the sidebar on startup while preserving its advanced runtime controls. See docs/SINGLE_QUESTION_UI.md.

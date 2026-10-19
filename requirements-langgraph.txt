@@ -1,0 +1,2 @@
+# Optional workflow engine for ExoTrace's LangGraph migration.
+langgraph>=1.0,<2.0

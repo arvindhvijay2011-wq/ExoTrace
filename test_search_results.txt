@@ -1,0 +1,35 @@
+﻿B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:8: from exotrace.agents.catalogue_data import CatalogueDataAgent
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:10: from exotrace.agents.planning import OpenAIResponsesTaskPlanner
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:55: agent = CatalogueDataAgent(available_fields=fields)
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:69: agent = CatalogueDataAgent(available_fields=("pl_name", "hostname", "pl_orbper"))
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:83: agent = CatalogueDataAgent(available_fields=("pl_name", "hostname"))
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:97: agent = CatalogueDataAgent(available_fields=("pl_name", "hostname"))
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:119: agent = CatalogueDataAgent(available_fields=fields)
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_conversational_defaults_regression.py:152: planner = OpenAIResponsesTaskPlanner(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:13: OpenAIResponsesTaskPlanner,
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:83: def make_planner(response: dict[str, Any]) -> tuple[OpenAIResponsesTaskPlanner, dict[str, Any]]:
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:96: planner = OpenAIResponsesTaskPlanner(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:243: from exotrace.agents.catalogue_data import CatalogueDataAgent
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:245: agent = CatalogueDataAgent(available_fields=("pl_name", "hostname", "pl_orbper"))
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:258: from exotrace.agents.catalogue_data import CatalogueDataAgent
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:259: from exotrace.agents.planning import OpenAIResponsesTaskPlanner, _remove_optional_nulls
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:261: agent = CatalogueDataAgent(available_fields=("pl_name", "hostname", "pl_orbper"))
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_dynamic_planner.py:263: schema = OpenAIResponsesTaskPlanner._response_schema((descriptor,))
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_orchestrator.py:17: InvestigationOrchestrator,
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_orchestrator.py:237: InvestigationOrchestrator,
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_orchestrator.py:250: orchestrator = InvestigationOrchestrator(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_orchestrator.py:476: orchestrator = InvestigationOrchestrator(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_orchestrator.py:553: orchestrator = InvestigationOrchestrator(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_orchestrator.py:599: orchestrator = InvestigationOrchestrator(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_quantitative_handoff.py:10: InvestigationOrchestrator,
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_quantitative_handoff.py:214: orchestrator = InvestigationOrchestrator(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_quantitative_handoff.py:296: orchestrator = InvestigationOrchestrator(
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:12: from exotrace.agents.catalogue_data import CatalogueDataAgent
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:168: agent = CatalogueDataAgent()
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:196: agent = CatalogueDataAgent()
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:220: agent = CatalogueDataAgent()
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:249: agent = CatalogueDataAgent()
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:268: agent = CatalogueDataAgent()
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:287: agent = CatalogueDataAgent()
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:306: CatalogueDataAgent as PublicCatalogueDataAgent,
+B:\VS Code Projects\Gen AI_Agentic AI_Projects\ExoTrace\tests\test_specialist_agents.py:315: assert PublicCatalogueDataAgent is CatalogueDataAgent

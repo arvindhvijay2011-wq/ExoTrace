@@ -1,0 +1,180 @@
+{
+  "name": "ExoTrace source-level retrieval benchmark v2",
+  "description": "Fixed source-level benchmark comparing BM25, dense, RRF, and query-routed retrieval. Labels refer to NASA source pages; parameter-definition documents inherit their official source-page slug.",
+  "questions": [
+    {
+      "id": "transit_detection",
+      "query": "How does the transit method detect an exoplanet?",
+      "expected_source_slugs": [
+        "exoplanet_facts",
+        "detection_methods"
+      ],
+      "note": "Both pages contain explanatory material about transit detection."
+    },
+    {
+      "id": "radial_velocity",
+      "query": "How does the radial velocity method detect an exoplanet?",
+      "expected_source_slugs": [
+        "detection_methods"
+      ],
+      "note": "The detection-methods page includes a dedicated radial-velocity section."
+    },
+    {
+      "id": "transit_spectroscopy",
+      "query": "How does transit spectroscopy reveal an exoplanet atmosphere?",
+      "expected_source_slugs": [
+        "detection_methods"
+      ],
+      "note": "Look for the section about reading light through planetary atmospheres."
+    },
+    {
+      "id": "microlensing",
+      "query": "How does gravitational microlensing reveal an exoplanet?",
+      "expected_source_slugs": [
+        "detection_methods"
+      ],
+      "note": "Look for the gravitational microlensing section."
+    },
+    {
+      "id": "direct_imaging",
+      "query": "How can astronomers detect an exoplanet using direct imaging?",
+      "expected_source_slugs": [
+        "detection_methods"
+      ],
+      "note": "Look for the direct-imaging section."
+    },
+    {
+      "id": "habitable_zone_definition",
+      "query": "What is the habitable zone around a star?",
+      "expected_source_slugs": [
+        "habitable_zone"
+      ],
+      "note": "The habitable-zone overview is the primary source."
+    },
+    {
+      "id": "insolation_definition_calculation",
+      "query": "What does planetary insolation mean, and how is it calculated?",
+      "expected_source_slugs": [
+        "archive_parameter_columns",
+        "composite_parameter_calculations"
+      ],
+      "note": "Both the column definitions and calculation notes are relevant."
+    },
+    {
+      "id": "equilibrium_temperature",
+      "query": "How does the NASA Exoplanet Archive calculate equilibrium temperature?",
+      "expected_source_slugs": [
+        "composite_parameter_calculations"
+      ],
+      "note": "Use the composite-parameter calculation documentation."
+    },
+    {
+      "id": "orbital_period_units",
+      "query": "What units are used for planetary orbital period in the archive?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Use the archive's field definitions."
+    },
+    {
+      "id": "eccentricity_definition",
+      "query": "What does planetary orbital eccentricity describe?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Use the archive's field definitions."
+    },
+    {
+      "id": "tap_service",
+      "query": "How can I query the NASA Exoplanet Archive using TAP?",
+      "expected_source_slugs": [
+        "tap_query_documentation"
+      ],
+      "note": "Use the official TAP query documentation."
+    },
+    {
+      "id": "composite_parameters",
+      "query": "How does NASA calculate composite parameters when values are derived from other measurements?",
+      "expected_source_slugs": [
+        "composite_parameter_calculations"
+      ],
+      "note": "Use the composite-parameter calculation documentation."
+    },
+    {
+      "id": "exoplanet_naming",
+      "query": "How are exoplanets named in the NASA catalogue?",
+      "expected_source_slugs": [
+        "exoplanet_facts"
+      ],
+      "note": "The NASA facts page discusses the naming convention."
+    },
+    {
+      "id": "candidate_vs_confirmed",
+      "query": "What is the difference between an exoplanet candidate and a confirmed exoplanet?",
+      "expected_source_slugs": [
+        "exoplanet_facts",
+        "exoplanet_overview"
+      ],
+      "note": "The NASA facts and overview pages discuss exoplanets and candidates."
+    },
+    {
+      "id": "planetary_radius",
+      "query": "What does the planetary radius field mean and what units does the archive use?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Use the archive's parameter definitions."
+    },
+    {
+      "id": "reference_uncertainties",
+      "query": "How does the NASA archive represent upper and lower measurement uncertainties?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Use the archive's uncertainty-field definitions."
+    },
+    {
+      "id": "kepler_transits",
+      "query": "How did the Kepler mission find planets by observing dips in starlight?",
+      "expected_source_slugs": [
+        "detection_methods",
+        "exoplanet_facts",
+        "exoplanet_overview"
+      ],
+      "note": "Multiple official NASA explanatory pages cover transit surveys."
+    },
+    {
+      "id": "rogue_planets",
+      "query": "What is a rogue or free-floating planet?",
+      "expected_source_slugs": [
+        "exoplanet_overview",
+        "exoplanet_facts"
+      ],
+      "note": "The overview and facts pages introduce free-floating planets."
+    },
+    {
+      "id": "identifier_eccentricity_field",
+      "query": "What does the NASA archive field pl_orbeccen describe?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Exact schema identifier query; exercises lexical routing to the official field row."
+    },
+    {
+      "id": "identifier_insolation_field",
+      "query": "What does the NASA archive field pl_insol measure?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Exact schema identifier query; exercises lexical routing to the official field row."
+    },
+    {
+      "id": "identifier_orbital_period_field",
+      "query": "What units are used for the NASA archive field pl_orbper?",
+      "expected_source_slugs": [
+        "archive_parameter_columns"
+      ],
+      "note": "Exact schema identifier query; exercises lexical routing to the official field row."
+    }
+  ]
+}

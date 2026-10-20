@@ -1,10 +1,11 @@
-"""Resolve planner-shortened planet identifiers only from explicit catalogue evidence.
+"""Resolve planner identifiers and safe broad-profile defaults from catalogue evidence.
 
-The resolver does not infer a planet from keywords or search for arbitrary aliases. It looks for
-complete, canonical ``pl_name`` values literally present in the user's question, using identities
-from the checksum-verified catalogue. A shortened task identifier is repaired only when it equals
-the hostname of exactly one such explicitly mentioned planet. Ambiguous and host-star operations
-are left unchanged.
+Canonical ``pl_name`` and hostname identities come from the checksum-verified catalogue. A
+shortened task identifier is repaired only when the complete planet name is explicit in the
+question and uniquely resolves to the supplied hostname. When a planner asks only for a preferred
+level of detail despite one uniquely named planet, the resolver can create a minimal catalogue
+profile task from a live agent contract. Ambiguous identities and host-star operations are left
+unchanged.
 """
 
 from __future__ import annotations
@@ -13,14 +14,27 @@ from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any, Mapping
 
-from exotrace.agents.planning import InvestigationPlan, PlanDisposition, PlannedAgentTask
+from exotrace.agents.contracts import AgentDescriptor
+from exotrace.agents.planning import (
+    InvestigationPlan,
+    PlanDisposition,
+    PlannedAgentTask,
+)
 
 
 class CataloguePlanetIdentifierResolver:
     """Safely align planner contexts with complete planet names explicitly in the question."""
 
-    def __init__(self, planet_host_identities: Sequence[tuple[str, str]]) -> None:
-        """Create a resolver from canonical ``(pl_name, hostname)`` source pairs."""
+    def __init__(
+        self,
+        planet_host_identities: Sequence[tuple[str, str]],
+        *,
+        agent_descriptors: Sequence[AgentDescriptor] = (),
+    ) -> None:
+        """Create a resolver from source identities and optional live agent contracts."""
+        if any(not isinstance(item, AgentDescriptor) for item in agent_descriptors):
+            raise TypeError("agent_descriptors must contain AgentDescriptor objects.")
+        self._agent_descriptors = tuple(agent_descriptors)
         identities: list[tuple[str, str]] = []
         seen_names: dict[str, str] = {}
         for index, identity in enumerate(planet_host_identities, start=1):
@@ -58,11 +72,10 @@ class CataloguePlanetIdentifierResolver:
         """
         if not isinstance(plan, InvestigationPlan):
             raise TypeError("plan must be an InvestigationPlan.")
-        if plan.disposition is not PlanDisposition.READY:
-            return plan
-
         mentioned = self._explicitly_mentioned_planets(plan.question)
-        if not mentioned:
+        if plan.disposition is PlanDisposition.NEEDS_CLARIFICATION:
+            return self._default_broad_profile_when_scope_is_optional(plan, mentioned)
+        if plan.disposition is not PlanDisposition.READY or not mentioned:
             return plan
 
         resolved_tasks: list[PlannedAgentTask] = []
@@ -80,6 +93,117 @@ class CataloguePlanetIdentifierResolver:
         if not changed:
             return plan
         return replace(plan, tasks=tuple(resolved_tasks))
+
+    def _default_broad_profile_when_scope_is_optional(
+        self,
+        plan: InvestigationPlan,
+        mentioned: tuple[tuple[str, str], ...],
+    ) -> InvestigationPlan:
+        """Use a source-backed catalogue profile instead of asking a preference-only question.
+
+        This fallback is deliberately narrow: it requires exactly one complete canonical planet
+        name in the question, every planner clarification to be about choosing the desired level
+        or aspect of detail, and exactly one registered catalogue agent whose schema supports a
+        structured ``pl_name`` filter. Entity ambiguity and other required decisions remain
+        clarification outcomes.
+        """
+        if len(mentioned) != 1 or not self._is_scope_preference_clarification(
+            plan.clarifying_questions
+        ):
+            return plan
+        descriptor = self._catalogue_profile_descriptor()
+        if descriptor is None:
+            return plan
+
+        planet_name, _hostname = mentioned[0]
+        task = PlannedAgentTask(
+            agent_id=descriptor.agent_id,
+            question=plan.question,
+            objective=(
+                "Retrieve the validated catalogue profile for the explicitly identified planet, "
+                "using the catalogue agent's source-defined default field set."
+            ),
+            required_capabilities=descriptor.capabilities,
+            context={"filters": [{"field": "pl_name", "value": planet_name}]},
+            task_key="default-catalogue-profile",
+            depends_on=(),
+        )
+        return InvestigationPlan(
+            question=plan.question,
+            disposition=PlanDisposition.READY,
+            summary=(
+                "The question identifies one canonical planet in the validated catalogue. "
+                "Using the broad catalogue profile as the default avoids asking the user to "
+                "choose among optional information categories."
+            ),
+            tasks=(task,),
+            clarifying_questions=(),
+            planner_model=plan.planner_model,
+        )
+
+    @staticmethod
+    def _is_scope_preference_clarification(questions: Sequence[str]) -> bool:
+        """Recognize optional 'which aspects?' clarifications, not missing required inputs."""
+        if not questions or any(
+            not isinstance(item, str) or not item.strip() for item in questions
+        ):
+            return False
+        preference_markers = (
+            "what specific information",
+            "what information are you looking for",
+            "what kind of information",
+            "what details are you looking for",
+            "which details are you looking for",
+            "what aspects are you interested in",
+            "which aspects are you interested in",
+            "what would you like to know",
+            "which aspects would you like",
+        )
+        return all(
+            any(marker in question.casefold() for marker in preference_markers)
+            for question in questions
+        )
+
+    def _catalogue_profile_descriptor(self) -> AgentDescriptor | None:
+        """Find the unique registered agent whose live schema supports canonical planet filters."""
+        candidates: list[AgentDescriptor] = []
+        for descriptor in self._agent_descriptors:
+            if not {"catalogue.lookup", "catalogue.raw_values"}.issubset(
+                set(descriptor.capabilities)
+            ):
+                continue
+            schema = descriptor.task_context_schema
+            properties = schema.get("properties", {})
+            filter_schema = properties.get("filters") if isinstance(properties, Mapping) else None
+            if not isinstance(filter_schema, Mapping) or filter_schema.get("type") != "array":
+                continue
+            item_schema = filter_schema.get("items")
+            item_properties = (
+                item_schema.get("properties", {}) if isinstance(item_schema, Mapping) else {}
+            )
+            field_schema = (
+                item_properties.get("field") if isinstance(item_properties, Mapping) else None
+            )
+            value_schema = (
+                item_properties.get("value") if isinstance(item_properties, Mapping) else None
+            )
+            if not isinstance(field_schema, Mapping) or not isinstance(value_schema, Mapping):
+                continue
+            enum_values = field_schema.get("enum")
+            if isinstance(enum_values, list) and "pl_name" not in enum_values:
+                continue
+            required_item_keys = (
+                set(item_schema.get("required", []))
+                if isinstance(item_schema, Mapping)
+                else set()
+            )
+            if required_item_keys and not {"field", "value"}.issubset(required_item_keys):
+                continue
+            required_context_keys = set(schema.get("required", []))
+            if "filters" not in required_context_keys:
+                continue
+            candidates.append(descriptor)
+        return candidates[0] if len(candidates) == 1 else None
 
     def _explicitly_mentioned_planets(self, question: str) -> tuple[tuple[str, str], ...]:
         """Find full source planet names explicitly present in the question, longest first."""

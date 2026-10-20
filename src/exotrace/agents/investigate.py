@@ -166,7 +166,8 @@ def _build_orchestrator(
     if not isinstance(catalogue_tool, CatalogueRecordLookupTool):
         raise TypeError("The registered catalogue lookup tool is not the validated catalogue tool.")
     identifier_resolver = CataloguePlanetIdentifierResolver(
-        catalogue_tool.planet_host_identities
+        catalogue_tool.planet_host_identities,
+        agent_descriptors=agents.descriptors(),
     )
     return InvestigationOrchestrator(
         agent_registry=agents,

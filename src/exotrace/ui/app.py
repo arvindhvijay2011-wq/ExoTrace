@@ -12,9 +12,9 @@ from exotrace.ui.plan_guard import plan_review_issues
 from exotrace.ui.presentation import (
     calculation_answer_statements,
     calculation_summaries,
-    group_answer_claims,
     planned_calculation_formulas,
     reader_friendly_source_title,
+    render_cited_claims_paragraph,
 )
 from exotrace.ui.service import (
     PROJECT_ROOT,
@@ -441,23 +441,13 @@ def _render_synthesized_answer(payload: dict[str, Any] | None, *, answer_path: s
         for item in evidence_items
         if isinstance(item, dict) and item.get("evidence_id")
     } if isinstance(evidence_items, list) else {}
-    claim_groups = group_answer_claims(answer)
-    if not claim_groups:
+    answer_paragraph = render_cited_claims_paragraph(answer)
+    if not answer_paragraph:
         st.info("The sources were retrieved, but no answer claims were available to display.")
     else:
-        if len(claim_groups) > 1:
-            st.caption(
-                f"Summary of {len(claim_groups)} source-backed records from the frozen catalogue."
-            )
-        for group in claim_groups:
-            # Keep reader-friendly formatting in the UI, not in the grouping helper.
-            title = reader_friendly_source_title(str(group.get("title") or "Finding"))
-            statement = str(group.get("text") or "").strip()
-            if title != "Finding":
-                st.markdown(f"**{title}**")
-            if statement:
-                # Claims tied to one record read as one paragraph, not a stack of evidence cards.
-                st.markdown(statement)
+        # Keep the narrative coherent across source types. Citation IDs remain attached to each
+        # generated claim and the source ledger remains available below in the disclosure.
+        st.markdown(answer_paragraph)
 
     if evidence_by_id:
         with st.expander("Sources and provenance", expanded=False):

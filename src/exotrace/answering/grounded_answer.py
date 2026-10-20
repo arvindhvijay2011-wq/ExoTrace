@@ -41,6 +41,8 @@ Rules:
 9. Generated planet profiles are search aids derived from a catalogue snapshot, not independent publications. Do not present values found only in those profiles as independently verified authoritative measurements. If the question requires an exact numerical catalogue answer and the supplied evidence does not establish it adequately, abstain and explain what is missing.
 10. If the evidence is absent, ambiguous, or only loosely related, set answerable to false, return no claims, and state the limitation in insufficient_reason.
 11. Keep the answer focused. Do not include chain-of-thought or hidden reasoning.
+12. Synthesize complementary evidence into one coherent, natural explanation rather than disconnected mini-summaries organized by source. Group related facts and avoid repeating a long entity name when a pronoun has an unambiguous referent. Each factual claim must still remain a separate claim with its own supporting evidence IDs.
+13. Respect the evidence's source role. A catalogue record supports its recorded values; graph evidence supports the relationships explicitly represented; reference-corpus passages may define terminology or provide general context. Do not present general documentation as research about the specific object unless the passage establishes that connection. Combine sources only where the cited evidence directly supports the claim, and do not force an irrelevant source into the answer.
 
 Return only the JSON object required by the response schema. No markdown, no citations written into claim text, and no source list. The application will render citations from validated evidence IDs."""
 
@@ -314,10 +316,15 @@ def render_markdown(answer: GroundedAnswer) -> str:
             ]
         )
     else:
+        rendered_claims: list[str] = []
         for claim in answer.claims:
             citations = " ".join(f"[{evidence_id}]" for evidence_id in claim.evidence_ids)
-            lines.append(f"{claim.text} {citations}")
-            lines.append("")
+            rendered_claims.append(f"{claim.text} {citations}")
+        if rendered_claims:
+            # The claim objects remain separate for validation and the evidence ledger. Joining
+            # them only at presentation time lets related, independently cited sentences read as
+            # one narrative instead of a sequence of disconnected paragraphs.
+            lines.extend([" ".join(rendered_claims), ""])
 
     used_ids: list[str] = []
     for claim in answer.claims:

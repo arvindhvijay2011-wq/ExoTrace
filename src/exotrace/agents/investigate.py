@@ -168,6 +168,8 @@ def _build_orchestrator(
     identifier_resolver = CataloguePlanetIdentifierResolver(
         catalogue_tool.planet_host_identities,
         agent_descriptors=agents.descriptors(),
+        include_context_sources=True,
+        max_agent_tasks=max_agent_tasks,
     )
     return InvestigationOrchestrator(
         agent_registry=agents,

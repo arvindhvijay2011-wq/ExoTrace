@@ -296,6 +296,41 @@ def reader_friendly_source_title(title: str) -> str:
     return cleaned or "Source"
 
 
+def render_cited_claims_paragraph(payload: Mapping[str, Any]) -> str:
+    """Render validated claim text as a connected paragraph with inline source IDs.
+
+    This helper changes presentation only: it neither merges claim objects nor alters their
+    evidence IDs. The saved answer retains the original per-claim citation ledger, while the UI
+    can read the adjacent, individually cited sentences as one explanation instead of separate
+    source-headed fragments.
+    """
+    raw_answer = payload.get("answer")
+    answer = raw_answer if isinstance(raw_answer, Mapping) else payload
+    raw_claims = answer.get("claims", [])
+    if not isinstance(raw_claims, list):
+        return ""
+
+    rendered: list[str] = []
+    for claim in raw_claims:
+        if not isinstance(claim, Mapping):
+            continue
+        text = claim.get("text")
+        if not isinstance(text, str) or not text.strip():
+            continue
+        raw_ids = claim.get("evidence_ids", [])
+        evidence_id_values = raw_ids if isinstance(raw_ids, list) else []
+        evidence_ids = tuple(
+            dict.fromkeys(
+                value.strip()
+                for value in evidence_id_values
+                if isinstance(value, str) and value.strip()
+            )
+        )
+        citations = " ".join(f"[{evidence_id}]" for evidence_id in evidence_ids)
+        rendered.append(f"{text.strip()} {citations}".rstrip())
+    return " ".join(rendered)
+
+
 def group_answer_claims(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Group claim-level statements by their shared evidence for compact UI rendering.
 

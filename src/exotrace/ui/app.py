@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from html import escape as escape_html
 from pathlib import Path
 from typing import Any
 
@@ -30,36 +31,35 @@ HERO_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "exotrace_intro_b
 NASA_EXOPLANET_ARCHIVE_URL = "https://exoplanetarchive.ipac.caltech.edu/"
 
 
-STARTER_QUESTIONS: tuple[tuple[str, str], ...] = (
-    (
-        "Compare two planets",
-        "Compare the catalogue radii of Kepler-10 b and Kepler-10 c. Retrieve each value from its exact catalogue record, then calculate the ratio Kepler-10 c pl_rade divided by Kepler-10 b pl_rade. Show the formula and preserve evidence and snapshot provenance.",
-    ),
-    (
-        "Explain a catalogue field",
-        "What does the planetary orbital eccentricity field pl_orbeccen represent? Explain its scientific meaning using the official NASA Exoplanet Archive field definition and cite the evidence.",
-    ),
-    (
-        "Explore a host star",
-        "Retrieve catalogue properties for planets orbiting Kepler-10. Summarize the records and distinguish catalogue measurements from interpretation. Preserve record and snapshot provenance.",
-    ),
-)
-
 CUSTOM_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 :root { color-scheme: dark; }
+html, body, [data-testid="stAppViewContainer"] { background:#06101e; }
 .stApp {
   background:
-    radial-gradient(ellipse at 10% 0%, rgba(54,95,156,.22), transparent 36%),
-    radial-gradient(ellipse at 96% 18%, rgba(34,185,181,.10), transparent 34%),
-    linear-gradient(145deg,#07111f 0%,#0a1425 52%,#0b1b2b 100%);
-  color:#eaf2ff;
+    radial-gradient(ellipse at 8% 0%, rgba(75,127,211,.24), transparent 36%),
+    radial-gradient(ellipse at 92% 14%, rgba(46,211,196,.15), transparent 34%),
+    radial-gradient(ellipse at 50% 100%, rgba(104,90,190,.10), transparent 43%),
+    linear-gradient(145deg,#060f1d 0%,#091729 52%,#071b29 100%);
+  background-attachment:fixed;
+  color:#edf5ff;
   font-family:'Plus Jakarta Sans',Inter,ui-sans-serif,system-ui,sans-serif;
 }
-[data-testid="stSidebar"] { background:rgba(5,15,28,.82); border-right:1px solid rgba(162,190,231,.12); }
-[data-testid="stSidebar"] > div:first-child { background:transparent; }
-.block-container { max-width:1180px; padding-top:1.6rem; padding-bottom:2.8rem; }
-[data-testid="stHeader"] { background:rgba(5,15,28,.18); }
+/* The advanced-settings rail is intentionally removed from the visible UI. */
+[data-testid="stSidebar"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarNav"] { display:none !important; visibility:hidden !important; width:0 !important; }
+[data-testid="stAppViewContainer"] > .main { margin-left:0 !important; }
+[data-testid="stHeader"] {
+  background:rgba(7,15,29,.30) !important;
+  backdrop-filter:blur(24px) saturate(145%);
+  -webkit-backdrop-filter:blur(24px) saturate(145%);
+}
+.block-container { max-width:1220px; padding-top:1.55rem; padding-bottom:3rem; }
+h1,h2,h3 { letter-spacing:-.035em !important; }
+.stMarkdown h2 { color:#f3f7ff; font-weight:800; }
+.stMarkdown p { line-height:1.72; }
 .exo-brand { display:flex; align-items:center; gap:.7rem; margin:.2rem 0 1.05rem; }
 .exo-mark { width:2.4rem;height:2.4rem;display:grid;place-items:center;border-radius:13px;
   color:#d8fbff;font-size:1.3rem;border:1px solid rgba(117,226,222,.36);
@@ -69,31 +69,135 @@ CUSTOM_CSS = """
 .eyebrow { color:#76d8d0;font-size:.70rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase; }
 .hero-title { color:#f1f6ff;font-size:clamp(2rem,4vw,3.1rem);line-height:1.12;font-weight:800;letter-spacing:-.045em;margin:.55rem 0 .55rem; }
 .hero-title span { color:#78d9d1; }
-.hero-copy { max-width:720px;color:#a5b8ce;font-size:.96rem;line-height:1.7;margin-bottom:1.35rem; }
+.hero-copy { max-width:780px;color:#afc2d8;font-size:.96rem;line-height:1.75;margin-bottom:1.35rem; }
 .section-copy { color:#9eb3c9;font-size:.86rem; }
-.stTextArea textarea, .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {
-  background:rgba(6,17,31,.64)!important;color:#edf5ff!important;
-  border-color:rgba(146,179,216,.22)!important;border-radius:12px!important;
+/* Liquid-glass question composer. */
+[data-testid="stForm"] {
+  position:relative;
+  padding:1rem 1rem .85rem;
+  border:1px solid rgba(195,222,255,.19) !important;
+  border-radius:24px !important;
+  background:linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.025) 48%,rgba(83,176,206,.045)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 18px 52px rgba(0,0,0,.20),0 0 36px rgba(69,154,205,.045);
+  backdrop-filter:blur(28px) saturate(155%);
+  -webkit-backdrop-filter:blur(28px) saturate(155%);
 }
-div.stButton > button { border-radius:11px; min-height:2.55rem; font-weight:650;
-  border:1px solid rgba(121,205,213,.24);background:rgba(19,39,59,.72);color:#eaf9ff;transition:all .15s ease; }
-div.stButton > button:hover { border-color:rgba(118,224,214,.65);color:white; }
-div.stButton > button[kind="primary"] { background:linear-gradient(110deg,#3aa6c4,#2ac2a5);color:#041622;border:0; }
-[data-testid="stMetric"] { background:rgba(14,31,49,.62);border:1px solid rgba(151,184,218,.13);padding:.9rem 1rem;border-radius:15px; }
-[data-testid="stMetricLabel"] { color:#9db3cb!important; }
-[data-testid="stMetricValue"] { color:#eef6ff!important; }
-[data-testid="stExpander"] { border:1px solid rgba(148,180,214,.15)!important;border-radius:12px!important;background:rgba(10,25,41,.32); }
+[data-testid="stForm"]:before {
+  content:"";position:absolute;pointer-events:none;inset:0 10% auto;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(209,246,255,.48),rgba(123,227,219,.32),transparent);
+}
+.stTextArea textarea, .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {
+  background:rgba(4,13,27,.55)!important;color:#f0f6ff!important;
+  border:1px solid rgba(169,202,235,.20)!important;border-radius:16px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.stTextArea textarea:focus, .stTextInput input:focus {
+  border-color:rgba(117,224,220,.60)!important;
+  box-shadow:0 0 0 3px rgba(65,197,191,.10),inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+div.stButton > button, [data-testid="stFormSubmitButton"] button {
+  border-radius:15px; min-height:2.75rem; font-weight:700; letter-spacing:.005em;
+  border:1px solid rgba(176,223,242,.20);
+  background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  color:#effaff; box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 22px rgba(0,0,0,.12);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+div.stButton > button:hover, [data-testid="stFormSubmitButton"] button:hover {
+  transform:translateY(-1px);border-color:rgba(119,227,219,.55);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 12px 28px rgba(0,0,0,.2),0 0 24px rgba(60,193,190,.08);
+}
+div.stButton > button[kind="primary"], [data-testid="stFormSubmitButton"] button[kind="primary"] {
+  color:#041521;border:1px solid rgba(193,255,249,.26);
+  background:linear-gradient(112deg,#9be9f2 0%,#5dd7d2 48%,#70e6c0 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 24px rgba(50,199,187,.15);
+}
+[data-testid="stMetric"] {
+  background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+  border:1px solid rgba(191,220,244,.15);padding:.9rem 1rem;border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 14px 32px rgba(0,0,0,.12);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+[data-testid="stMetricLabel"] { color:#a9bfd6!important; }
+[data-testid="stMetricValue"] { color:#f1f8ff!important; }
+[data-testid="stExpander"] {
+  border:1px solid rgba(178,211,239,.16)!important;border-radius:16px!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.018))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+[data-testid="stAlert"] {
+  border:1px solid rgba(174,215,244,.18);border-radius:18px!important;
+  background:linear-gradient(135deg,rgba(62,135,194,.17),rgba(255,255,255,.035))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 28px rgba(0,0,0,.10);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
 [data-testid="stTabs"] button { font-weight:600; }
-hr { border-color:rgba(146,179,216,.13)!important; }
-.small-muted { color:#8da5be;font-size:.78rem; }
-.status-line { color:#9eb3c9;font-size:.83rem;margin:.2rem 0 .65rem; }
-[data-testid="stImage"] img { display:block; width:100%; border:1px solid rgba(121,205,213,.18); border-radius:16px; box-shadow:0 20px 52px rgba(0,0,0,.22); }
-.data-source-bar { display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;margin:.85rem 0 1.35rem;padding:.7rem .95rem;border:1px solid rgba(121,205,213,.16);border-radius:12px;background:rgba(8,21,36,.54); }
-.data-source-label { color:#76d8d0;font-size:.67rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase; }
-.data-source-bar a { color:#e7f4ff;text-decoration:none;font-size:.82rem;font-weight:700; }
-.data-source-bar a:hover { color:#78d9d1;text-decoration:underline; }
-.data-source-note { color:#8fa7c0;font-size:.74rem; }
-.result-formula { color:#a5c3db;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9rem;overflow-wrap:anywhere; }
+hr { border-color:rgba(180,212,241,.13)!important; }
+.small-muted { color:#91a9c3;font-size:.78rem; }
+.status-line { color:#a3bad1;font-size:.83rem;margin:.2rem 0 .65rem; }
+[data-testid="stImage"] img {
+  display:block;width:100%;border:1px solid rgba(164,227,235,.20);border-radius:24px;
+  box-shadow:0 24px 64px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.data-source-bar {
+  display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;margin:.85rem 0 1.35rem;padding:.78rem 1rem;
+  border:1px solid rgba(185,221,242,.15);border-radius:16px;
+  background:linear-gradient(115deg,rgba(255,255,255,.065),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.data-source-label { color:#82e2d9;font-size:.67rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase; }
+.data-source-bar a { color:#edf8ff;text-decoration:none;font-size:.82rem;font-weight:700; }
+.data-source-bar a:hover { color:#8be7dd;text-decoration:underline; }
+.data-source-note { color:#9db4cc;font-size:.74rem; }
+.result-formula { color:#b3cfe4;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9rem;overflow-wrap:anywhere; }
+/* Trace stays explicitly report-backed, never labelled as live streaming. */
+.trace-panel {
+  position:relative;overflow:hidden;margin:1.2rem 0 1.35rem;padding:1.2rem 1.25rem 1rem;
+  border:1px solid rgba(164,224,238,.20);border-radius:24px;
+  background:linear-gradient(140deg,rgba(255,255,255,.075),rgba(16,49,72,.28) 42%,rgba(255,255,255,.025));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 24px 62px rgba(0,0,0,.19),0 0 45px rgba(74,184,201,.045);
+  backdrop-filter:blur(30px) saturate(160%);-webkit-backdrop-filter:blur(30px) saturate(160%);
+}
+.trace-panel:before {
+  content:"";position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(222,250,255,.65),rgba(104,225,215,.60),rgba(129,171,250,.35),transparent);
+}
+.trace-panel:after {
+  content:"";position:absolute;pointer-events:none;right:-7rem;top:-7rem;width:16rem;height:16rem;border-radius:50%;
+  background:radial-gradient(circle,rgba(65,188,202,.09),transparent 68%);
+}
+.trace-head { display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;position:relative;z-index:1; }
+.trace-title { color:#f2f8ff;font-size:1.02rem;font-weight:800;letter-spacing:-.025em; }
+.trace-copy { margin-top:.3rem;color:#a5bdd3;font-size:.82rem;line-height:1.6; }
+.trace-badge { display:inline-flex;align-items:center;gap:.42rem;border:1px solid rgba(126,224,215,.24);border-radius:999px;padding:.34rem .64rem;color:#8fe8dc;background:rgba(85,205,190,.075);font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.08); }
+.trace-badge:before { content:"";width:.42rem;height:.42rem;border-radius:50%;background:#80e5d7;box-shadow:0 0 0 4px rgba(112,216,202,.10); }
+.trace-list { position:relative;display:grid;gap:.12rem;margin-top:1rem;z-index:1; }
+.trace-list:before { content:"";position:absolute;left:.91rem;top:1.2rem;bottom:1.2rem;width:1px;background:linear-gradient(180deg,rgba(94,213,204,.52),rgba(106,144,181,.16)); }
+.trace-step { position:relative;display:grid;grid-template-columns:1.85rem minmax(0,1fr) auto;align-items:start;gap:.72rem;padding:.7rem .2rem;border-radius:12px;opacity:0;animation:exoTraceReveal .42s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:var(--trace-delay,0ms); }
+.trace-step:hover { background:rgba(255,255,255,.025); }
+.trace-node { z-index:1;display:grid;place-items:center;width:1.82rem;height:1.82rem;border-radius:50%;border:1px solid rgba(154,186,217,.32);background:rgba(9,26,44,.78);color:#b1c3d7;font-size:.78rem;font-weight:800;box-shadow:inset 0 1px 0 rgba(255,255,255,.08); }
+.trace-step.done .trace-node { border-color:rgba(100,225,207,.50);background:linear-gradient(145deg,rgba(23,108,112,.48),rgba(10,42,60,.78));color:#9af1df; }
+.trace-step.alert .trace-node { border-color:rgba(246,190,91,.48);background:rgba(94,63,23,.28);color:#ffd17b; }
+.trace-step.waiting .trace-node { border-style:dashed;color:#8ca8c6; }
+.trace-step-body { min-width:0;padding-top:.08rem; }
+.trace-step-title { color:#eaf3ff;font-size:.84rem;font-weight:750;line-height:1.45; }
+.trace-step-detail { margin-top:.15rem;color:#a0b6cd;font-size:.77rem;line-height:1.6;overflow-wrap:anywhere; }
+.trace-step-state { padding-top:.22rem;color:#8de4d6;font-size:.61rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;text-align:right;white-space:nowrap; }
+.trace-step.alert .trace-step-state { color:#f4c36e; }
+.trace-step.waiting .trace-step-state { color:#93aac2; }
+.trace-foot { display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;margin-top:.6rem;padding-top:.78rem;border-top:1px solid rgba(180,212,241,.13);color:#87a7c7;font-size:.72rem;position:relative;z-index:1; }
+@keyframes exoTraceReveal { from { opacity:0;transform:translateY(8px);filter:blur(2px); } to { opacity:1;transform:translateY(0);filter:blur(0); } }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; } .trace-step { opacity:1;transform:none;filter:none; } }
+@media (max-width:640px) {
+  .block-container { padding-top:1rem;padding-left:1rem;padding-right:1rem; }
+  [data-testid="stForm"] { padding:.8rem .7rem .65rem;border-radius:19px!important; }
+  .trace-panel {padding:1rem .8rem;border-radius:20px;}
+  .trace-step {grid-template-columns:1.8rem minmax(0,1fr);gap:.55rem;}
+  .trace-step-state {grid-column:2;text-align:left;padding-top:0;}
+  .trace-list:before {left:.89rem;}
+}
 """
 
 
@@ -683,6 +787,150 @@ def _render_sources(report: dict[str, Any]) -> None:
 
 
 
+
+def _render_execution_trace(plan_report: dict[str, Any] | None, result_report: dict[str, Any] | None) -> None:
+    """Render an animated, report-backed trace without changing the investigation pipeline.
+
+    This is a visual replay of persisted plan and result data. It deliberately does not
+    claim token-level or live backend streaming, and it never fabricates specialist events.
+    """
+    if not isinstance(plan_report, dict) and not isinstance(result_report, dict):
+        return
+
+    plan_source = plan_report if isinstance(plan_report, dict) else result_report or {}
+    plan = plan_source.get("plan", {})
+    plan = plan if isinstance(plan, dict) else {}
+    query = str(
+        st.session_state.get("active_query")
+        or plan_source.get("question")
+        or (result_report or {}).get("question")
+        or "Your research question"
+    ).strip()
+    disposition = str(plan.get("disposition") or "unknown").replace("_", " ")
+    plan_status = str(plan_source.get("status") or "unknown").replace("_", " ")
+    tasks = _plan_tasks(plan_source)
+    blocked = st.session_state.get("active_plan_blocked")
+    blocked = blocked if isinstance(blocked, dict) else {}
+    execution_error = st.session_state.get("active_execution_error")
+    synthesis_error = st.session_state.get("synthesis_error")
+    evidence = _collect_evidence(result_report) if isinstance(result_report, dict) else []
+    results = result_report.get("results", []) if isinstance(result_report, dict) else []
+    results = [item for item in results if isinstance(item, dict)] if isinstance(results, list) else []
+    answer_present = bool(st.session_state.get("active_answer"))
+    deterministic_answer = bool(result_report and calculation_summaries(result_report))
+
+    steps: list[tuple[str, str, str]] = []
+    steps.append(("Question received", query or "Natural-language question", "done"))
+
+    is_plan_ready = (
+        plan_source.get("status") == "planned"
+        and plan.get("disposition") == "ready"
+        and bool(tasks)
+    )
+    if plan_source.get("status") == "unsupported" or disposition in {"unsupported", "needs clarification", "clarification required"}:
+        plan_state = "alert"
+        plan_detail = f"Planner status: {plan_status}. No runnable specialist plan was produced."
+    elif plan.get("clarifying_questions"):
+        plan_state = "alert"
+        plan_detail = "The saved plan contains a clarification request."
+    elif is_plan_ready:
+        plan_state = "done"
+        plan_detail = f"{len(tasks)} specialist step(s) proposed from the saved plan."
+    else:
+        plan_state = "alert" if execution_error or blocked else "waiting"
+        plan_detail = f"Planner status: {plan_status}; disposition: {disposition}."
+    if plan.get("summary"):
+        summary = str(plan["summary"]).strip()
+        if summary and len(summary) < 300:
+            plan_detail += " " + summary
+    steps.append(("Investigation plan", plan_detail, plan_state))
+
+    if isinstance(result_report, dict):
+        steps.append(("Plan checks", "The UI allowed this saved plan to execute and a result report was returned.", "done"))
+    elif blocked:
+        checks_detail = str(blocked.get("message") or "The plan did not pass the UI execution checks.")
+        steps.append(("Plan checks", checks_detail, "alert"))
+    elif execution_error:
+        steps.append(("Plan checks", str(execution_error), "alert"))
+    elif is_plan_ready:
+        steps.append(("Plan checks", "The plan is ready; execution is pending user review.", "waiting"))
+    else:
+        steps.append(("Plan checks", "No specialist work was started for this plan.", "alert"))
+
+    if results:
+        for item in results:
+            agent = str(item.get("agent_id") or item.get("task_key") or "Specialist").replace("_", " ").title()
+            status = str(item.get("status") or "unknown").replace("_", " ")
+            agent_evidence = item.get("evidence", [])
+            evidence_count = len(agent_evidence) if isinstance(agent_evidence, list) else 0
+            detail = f"Result: {status}. {evidence_count} evidence item(s) returned."
+            if item.get("summary"):
+                brief = str(item["summary"]).strip()
+                if brief and len(brief) < 220:
+                    detail += " " + brief
+            result_status = str(item.get("status") or "").casefold()
+            state = "alert" if result_status in {"failed", "error", "blocked", "insufficient_evidence"} else "done"
+            steps.append((agent, detail, state))
+    elif isinstance(result_report, dict):
+        status = str(result_report.get("status") or "unknown").replace("_", " ")
+        steps.append(("Specialist work", f"The report contains no specialist result entries (status: {status}).", "alert"))
+    elif blocked or execution_error or not is_plan_ready:
+        steps.append(("Specialist work", "No specialist result was produced for this run.", "alert"))
+    else:
+        steps.append(("Specialist work", "Awaiting execution of the saved plan.", "waiting"))
+
+    if isinstance(result_report, dict):
+        if evidence:
+            steps.append(("Evidence assembled", f"{len(evidence)} unique evidence item(s) are available for inspection, with IDs and provenance preserved.", "done"))
+        else:
+            steps.append(("Evidence assembled", "The saved report contains no evidence items from specialists.", "alert"))
+    elif blocked or execution_error or not is_plan_ready:
+        steps.append(("Evidence assembled", "Evidence retrieval did not run for this question.", "alert"))
+    else:
+        steps.append(("Evidence assembled", "Evidence collection has not started yet.", "waiting"))
+
+    if deterministic_answer:
+        steps.append(("Answer prepared", "A deterministic calculation result is ready; it is shown without a second model rewrite.", "done"))
+    elif answer_present:
+        steps.append(("Answer synthesized", "A written answer is available. Citation IDs are linked to the investigation evidence pack.", "done"))
+    elif synthesis_error:
+        steps.append(("Answer synthesis", "The investigation ran, but written synthesis failed. See the optional diagnostics for details.", "alert"))
+    elif isinstance(result_report, dict):
+        steps.append(("Answer synthesis", "No synthesized answer is attached to this report.", "alert"))
+    elif blocked or execution_error or not is_plan_ready:
+        steps.append(("Answer synthesis", "No answer was synthesized because the investigation did not complete its evidence-gathering path.", "alert"))
+    else:
+        steps.append(("Answer synthesis", "Waiting for the investigation results.", "waiting"))
+
+    icons = {"done": "✓", "alert": "!", "waiting": "·"}
+    rows: list[str] = []
+    for index, (title, detail, state) in enumerate(steps):
+        safe_title = escape_html(str(title))
+        safe_detail = escape_html(str(detail))
+        safe_state = escape_html(state)
+        label = {"done": "Recorded", "alert": "Needs attention", "waiting": "Pending"}.get(state, "Recorded")
+        rows.append(
+            '<div class="trace-step ' + safe_state + '" style="--trace-delay:' + str(min(index * 65, 780)) + 'ms">'
+            '<div class="trace-node">' + icons.get(state, "·") + '</div>'
+            '<div class="trace-step-body"><div class="trace-step-title">' + safe_title + '</div>'
+            '<div class="trace-step-detail">' + safe_detail + '</div></div>'
+            '<div class="trace-step-state">' + escape_html(label) + '</div></div>'
+        )
+
+    evidence_count = len(evidence)
+    status_label = "Recorded run" if isinstance(result_report, dict) else "Plan preview"
+    st.html(
+        '<section class="trace-panel" aria-label="Execution trace">'
+        '<div class="trace-head"><div><div class="trace-title">Execution trace</div>'
+        '<div class="trace-copy">A visual replay of the saved plan, specialist results, and evidence returned for this question.</div></div>'
+        '<div class="trace-badge">' + escape_html(status_label) + '</div></div>'
+        '<div class="trace-list">' + ''.join(rows) + '</div>'
+        '<div class="trace-foot"><span>Recorded from ExoTrace report data · no private model reasoning shown</span>'
+        '<span>' + str(len(steps)) + ' stage(s) · ' + str(evidence_count) + ' evidence item(s)</span></div>'
+        '</section>'
+    )
+
+
 def main() -> None:
     """Render the answer-first workspace; plan and technical detail are opt-in."""
     st.set_page_config(
@@ -695,24 +943,27 @@ def main() -> None:
     for legacy_key in ("pending_followup", "followup_input", "followup_error", "active_planner_query"):
         st.session_state.pop(legacy_key, None)
     _inject_styles()
+    # Preserve the original run-control wiring. The sidebar is hidden by CSS, but the
+    # existing control defaults/readiness handling remain the source of run settings.
     with st.sidebar:
         controls = _readiness_sidebar()
 
     _render_intro_hero()
 
-    starter_columns = st.columns(3)
-    for index, (label, prompt) in enumerate(STARTER_QUESTIONS):
-        if starter_columns[index].button(label, key=f"starter-{index}", use_container_width=True):
-            st.session_state["query_input"] = prompt
-            st.rerun()
+    st.markdown("## What would you like to understand?")
+    st.html(
+        '<div class="hero-copy">Ask in your own words. ExoTrace will prepare an investigation, '
+        'retrieve relevant evidence, and show the sources behind its answer. You do not need to '
+        'know a database column or choose an agent.</div>'
+    )
 
     with st.form("exotrace-query-form", clear_on_submit=False):
         query = st.text_area(
             "Research question",
             key="query_input",
             height=100,
-            placeholder="Ask a question about an exoplanet, host star, or catalogue field…",
-            help="Ask naturally. Exact planet or host-star names help when you know them.",
+            placeholder="Ask ExoTrace anything about an exoplanet, its host star, or the science behind a discovery…",
+            help="Ask naturally. Include an exact planet or host-star name when you know it.",
             label_visibility="collapsed",
         )
         submit_label = "Review plan" if controls["review_plan_first"] else "Ask ExoTrace"
@@ -809,6 +1060,9 @@ def main() -> None:
             with st.expander("Why couldn't ExoTrace answer?", expanded=False):
                 _show_plan(plan_report)
 
+    if plan_report and not result_report:
+        _render_execution_trace(plan_report, None)
+
     if result_report:
         status = str(result_report.get("status", "unknown"))
         if status == "partial":
@@ -835,6 +1089,8 @@ def main() -> None:
                 synthesis_output = st.session_state.get("synthesis_error_output")
                 if synthesis_output:
                     st.code(str(synthesis_output)[-10000:], language="text")
+
+        _render_execution_trace(plan_report or result_report, result_report)
 
         with st.expander("Sources and evidence", expanded=False):
             _render_sources(result_report)

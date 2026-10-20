@@ -77,8 +77,7 @@ class GraphInvestigationConfig:
 _PLANET_CONTEXT_QUERY = """
 /* ExoTrace operation: planet_context */
 OPTIONAL MATCH (planet:Planet {name: $planet_name})
-CALL {
-    WITH planet
+CALL (planet) {
     OPTIONAL MATCH (host:HostStar)-[rel:HOSTS]->(planet)
     WITH DISTINCT host.name AS name, rel.snapshot_id AS snapshot_id,
          rel.source_record_id AS source_record_id
@@ -88,8 +87,7 @@ CALL {
     } END) AS items
     RETURN size(items) AS host_count, items[0..$result_limit] AS host_stars
 }
-CALL {
-    WITH planet
+CALL (planet) {
     OPTIONAL MATCH (planet)-[rel:DETECTED_BY]->(method:DiscoveryMethod)
     WITH DISTINCT method.name AS name, rel.snapshot_id AS snapshot_id,
          rel.source_record_id AS source_record_id
@@ -100,8 +98,7 @@ CALL {
     RETURN size(items) AS discovery_method_count,
            items[0..$result_limit] AS discovery_methods
 }
-CALL {
-    WITH planet
+CALL (planet) {
     OPTIONAL MATCH (planet)-[rel:DISCOVERED_AT]->(facility:DiscoveryFacility)
     WITH DISTINCT facility.name AS name, rel.snapshot_id AS snapshot_id,
          rel.source_record_id AS source_record_id
@@ -112,8 +109,7 @@ CALL {
     RETURN size(items) AS discovery_facility_count,
            items[0..$result_limit] AS discovery_facilities
 }
-CALL {
-    WITH planet
+CALL (planet) {
     OPTIONAL MATCH (planet)-[rel:HAS_DISCOVERY_REFERENCE]->(reference:PublicationReference)
     WITH DISTINCT reference.reference_id AS reference_id,
          reference.display_name AS display_name, reference.href AS href,
@@ -126,8 +122,7 @@ CALL {
     RETURN size(items) AS discovery_reference_count,
            items[0..$result_limit] AS discovery_references
 }
-CALL {
-    WITH planet
+CALL (planet) {
     OPTIONAL MATCH (record:CatalogueRecord)-[:DESCRIBES_PLANET]->(planet)
     WITH DISTINCT record.record_id AS record_id, record.snapshot_id AS snapshot_id,
          record.source_file AS source_file, record.source_row_number AS source_row_number,
@@ -152,8 +147,7 @@ RETURN planet.name AS entity_name,
 _HOST_PLANETS_QUERY = """
 /* ExoTrace operation: host_planets */
 OPTIONAL MATCH (host:HostStar {name: $host_name})
-CALL {
-    WITH host
+CALL (host) {
     OPTIONAL MATCH (host)-[rel:HOSTS]->(planet:Planet)
     WITH DISTINCT planet.name AS planet_name, rel.snapshot_id AS snapshot_id,
          rel.source_record_id AS source_record_id
@@ -171,8 +165,7 @@ RETURN host.name AS entity_name, host IS NOT NULL AS entity_found,
 _PLANET_RECORDS_QUERY = """
 /* ExoTrace operation: planet_records */
 OPTIONAL MATCH (planet:Planet {name: $planet_name})
-CALL {
-    WITH planet
+CALL (planet) {
     OPTIONAL MATCH (record:CatalogueRecord)-[:DESCRIBES_PLANET]->(planet)
     WITH DISTINCT record.record_id AS record_id, record.snapshot_id AS snapshot_id,
          record.source_file AS source_file, record.source_row_number AS source_row_number,
